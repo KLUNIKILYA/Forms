@@ -1,0 +1,134 @@
+﻿:root {
+    --primary-color: #4e73df;
+    --secondary-color: #f8f9fc;
+    --accent-color: #2e59d9;
+    --text-color: #5a5c69;
+}
+
+body {
+    background-color: var(--secondary-color);
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: var(--text-color);
+}
+
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 450px;
+    border-radius: 15px;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    overflow: hidden;
+    background: white;
+}
+
+.auth-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+    color: white;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+    .auth-header h2 {
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+
+.auth-body {
+    padding: 2rem;
+}
+
+.form-control {
+    padding: 0.75rem 1rem;
+    border-radius: 0.35rem;
+    margin-bottom: 1rem;
+}
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    padding: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+    .btn-primary:hover {
+        background-color: var(--accent-color);
+        border-color: var(--accent-color);
+    }
+
+.auth-footer {
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.9rem;
+    color: #858796;
+}
+
+.input-group-text {
+    background-color: #f8f9fc;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    margin: 1.5rem 0;
+}
+
+    .divider::before, .divider::after {
+        content: "";
+        flex: 1;
+        border-bottom: 1px solid #e3e6f0;
+    }
+
+.divider-text {
+    padding: 0 1rem;
+    color: #b7b9cc;
+    font-size: 0.85rem;
+}
+
+.social-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
+    border-radius: 0.35rem;
+    color: white;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+    .social-btn i {
+        margin-right: 0.5rem;
+        font-size: 1.1rem;
+    }
+
+.btn-google {
+    background-color: #ea4335;
+}
+
+.btn-facebook {
+    background-color: #3b5998;
+}
+
+.auth-switch {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+    .auth-switch a {
+        color: var(--primary-color);
+        font-weight: 600;
+        text-decoration: none;
+    }

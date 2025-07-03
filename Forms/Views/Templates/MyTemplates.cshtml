@@ -1,0 +1,113 @@
+﻿@model List<Forms.Models.Templates.UserTemplateViewModel>
+@{
+    ViewData["Title"] = "Мои шаблоны";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>@ViewData["Title"]</h1>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Создать новый шаблон
+        </a>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="row">
+            @foreach (var template in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 shadow-sm card-hover-template">
+                        <div class="card-img-top-wrapper">
+                            @if (template.IsPublic)
+                            {
+                                <span class="badge bg-success status-badge">Публичный</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary status-badge">Приватный</span>
+                            }
+
+                            @if (!string.IsNullOrEmpty(template.ImageUrl))
+                            {
+                                <div class="card-img-top" style="background-image: url('@template.ImageUrl');"></div>
+                            }
+                            else
+                            {
+                                <div class="card-img-top card-img-placeholder"></div>
+                            }
+                        </div>
+
+                        <div class="card-body">
+                            <h5 class="card-title">@template.Title</h5>
+                            <p class="card-text text-muted">
+                                @(template.Description != null && template.Description.Length > 80 ? template.Description.Substring(0, 80) + "..." : template.Description)
+                            </p>
+                        </div>
+
+                        <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+                            <span class="text-muted small">
+                                <i class="bi bi-input-cursor-text"></i> Заполнен: @template.TimesFilled раз
+                            </span>
+                            <div>
+                                <a asp-action="Edit" asp-route-id="@template.Id" class="btn btn-outline-primary btn-sm" title="Редактировать">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a asp-action="ViewResults" asp-route-templateId="@template.Id" class="btn btn-outline-info btn-sm" title="Посмотреть ответы">
+                                    <i class="bi bi-bar-chart-line"></i>
+                                </a>
+                                <!-- Форма для удаления с подтверждением -->
+                                <form asp-action="Delete" asp-route-id="@template.Id" method="post" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите удалить этот шаблон и все связанные с ним ответы? Это действие необратимо.');">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Удалить">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <div class="display-4 text-muted mb-3"><i class="bi bi-journal-plus"></i></div>
+            <h2>У вас пока нет созданных шаблонов</h2>
+            <p class="lead text-muted">Начните создавать свои уникальные формы прямо сейчас!</p>
+            <a asp-action="Create" class="btn btn-lg btn-success mt-3">
+                <i class="bi bi-plus-circle"></i> Создать первый шаблон
+            </a>
+        </div>
+    }
+</div>
+
+<style>
+    .card-hover-template {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+        .card-hover-template:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        }
+
+    .card-img-top-wrapper {
+        position: relative;
+    }
+
+    .card-img-top {
+        height: 180px;
+        background-size: cover;
+        background-position: center;
+        background-color: #f8f9fa;
+    }
+
+    .status-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 10;
+        font-size: 0.8rem;
+    }
+</style>

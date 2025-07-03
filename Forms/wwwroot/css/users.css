@@ -1,0 +1,85 @@
+﻿body {
+    background-color: #f8f9fa;
+}
+
+.table-container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-top: 20px;
+}
+
+.toolbar {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.table > :not(caption) > * > * {
+    padding: 0.75rem;
+    vertical-align: middle;
+}
+
+.table .form-check {
+    margin: 0;
+}
+
+.sparkline {
+    height: 20px;
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.sparkline-bar {
+    width: 4px;
+    background-color: #6c9fff;
+    border-radius: 1px;
+}
+
+.user-position {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.sort-icon {
+    margin-left: 5px;
+    font-size: 0.75rem;
+}
+
+.btn-block {
+    background-color: #e9ecef;
+    color: #212529;
+    border-color: #ced4da;
+}
+
+.btn-unblock {
+    color: #0d6efd;
+    background-color: transparent;
+    border: none;
+}
+
+.btn-delete {
+    color: #dc3545;
+    background-color: transparent;
+    border: none;
+}
+
+.strikethrough {
+    text-decoration: line-through;
+    color: #6c757d;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.pagination .page-link {
+    color: #0d6efd;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #6c757d;
+}

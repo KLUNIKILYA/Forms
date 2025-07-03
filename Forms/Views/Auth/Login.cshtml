@@ -1,0 +1,42 @@
+﻿@model Forms.Models.LoginUserViewModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<body>
+    <div class="auth-container">
+        <!-- Форма авторизации -->
+        <div class="auth-card" id="login-form">
+            <div class="auth-header">
+                <h2><i class="fas fa-key"></i> Авторизация</h2>
+            </div>
+            <div class="auth-body">
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="login-email" class="form-label">Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            <input class="form-control" id="login-email" name="Email" placeholder="Введите ваш email">
+                        </div>
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label for="login-password" class="form-label">Пароль</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input type="password" class="form-control" id="login-password" name="Password" placeholder="Введите ваш пароль">
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Войти</button>
+                </form>
+            </div>
+            <div class="auth-footer">
+                Нет аккаунта? <a href="/Auth/Register" onclick="switchToLogin()">Зарегистрируйтесь</a>
+            </div>
+        </div>
+    </div>
+
+</body>

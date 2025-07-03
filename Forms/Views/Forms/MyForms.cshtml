@@ -1,0 +1,82 @@
+﻿@model List<Forms.Models.Forms.MyFormViewModel>
+
+@{
+    ViewData["Title"] = "Мои заполненные формы";
+}
+
+<div class="container py-4">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    @if (Model.Any())
+    {
+        <div class="row">
+            @foreach (var form in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <a asp-controller="Forms" asp-action="Fill" asp-route-formId="@form.FormId" class="card-link">
+                        <div class="card h-100 shadow-sm card-hover">
+                            @if (!string.IsNullOrEmpty(form.TemplateImageUrl))
+                            {
+                                <div class="card-img-top" style="background-image: url('@form.TemplateImageUrl');"></div>
+                            }
+                            else
+                            {
+                                <div class="card-img-top card-img-placeholder"></div>
+                            }
+
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">@form.TemplateTitle</h5>
+                                <p class="card-text text-muted flex-grow-1">
+                                    @* Обрезаем длинное описание для красоты *@
+                                    @(form.TemplateDescription.Length > 100 ? form.TemplateDescription.Substring(0, 100) + "..." : form.TemplateDescription)
+                                </p>
+                                <p class="card-text mt-auto">
+                                    <small class="text-muted">
+                                        Последнее изменение: @form.LastUpdated.ToString("dd.MM.yyyy в HH:mm")
+                                    </small>
+                                </p>
+                            </div>
+                            <div class="card-footer bg-white border-0 text-end">
+                                <span class="btn btn-primary">Продолжить заполнение <i class="bi bi-pencil-square"></i></span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <div class="display-4 text-muted mb-3"><i class="bi bi-file-earmark-text"></i></div>
+            <h2>Вы еще не заполнили ни одной формы</h2>
+            <p class="lead text-muted">Начните, выбрав один из доступных шаблонов.</p>
+            <a asp-controller="Templates" asp-action="Index" class="btn btn-lg btn-success mt-3">
+                <i class="bi bi-plus-circle"></i> Перейти к выбору шаблона
+            </a>
+        </div>
+    }
+</div>
+
+<style>
+    .card-link {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .card-hover {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        }
+
+    .card-img-top {
+        height: 180px;
+        background-size: cover;
+        background-position: center;
+        background-color: #e9ecef;
+    }
+</style>

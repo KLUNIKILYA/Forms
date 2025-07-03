@@ -1,0 +1,174 @@
+﻿@model UserManagementViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="table-container bg-white rounded shadow-sm">
+        <div class="d-flex justify-content-between align-items-center p-3 bg-light border-bottom">
+            <form method="post" id="actionForm">
+                <input type="hidden" name="selectedUserIds" id="selectedUserIds" value="@string.Join(",", Model.Users.Where(u => u.IsSelected).Select(u => u.Id))" />
+                <input type="hidden" name="sortField" value="@Model.SortField" />
+
+                <button type="submit" asp-action="BlockUsers" asp-route-page="@(Model.CurrentPage)" class="btn btn-outline-secondary me-2" title="Заблокировать выбранных пользователей">
+                    <i class="bi bi-lock-fill"></i> Block
+                </button>
+                <button type="submit" asp-action="UnblockUsers" asp-route-page="@(Model.CurrentPage)" class="btn btn-link text-primary me-2" title="Разблокировать выбранных пользователей">
+                    <i class="bi bi-unlock-fill"></i>
+                </button>
+                <button type="submit" asp-action="DeleteUsers" asp-route-page="@(Model.CurrentPage)" class="btn btn-link text-danger me-2" title="Удалить выбранных пользователей">
+                    <i class="bi bi-trash-fill"></i>
+                </button>
+                <button type="submit" asp-action="MakeAdmin" asp-route-page="@(Model.CurrentPage)" class="btn btn-link text-success me-2" title="Сделать выбранных пользователей администраторами">
+                    <i class="bi bi-person-plus-fill"></i> Make Admin
+                </button>
+                <button type="submit" asp-action="RemoveAdmin" asp-route-page="@(Model.CurrentPage)" class="btn btn-link text-warning" title="Убрать права администратора у выбранных пользователей">
+                    <i class="bi bi-person-dash-fill"></i> Remove Admin
+                </button>
+            </form>
+
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    Filter
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <form method="post" asp-action="SelectAll">
+                <input type="hidden" name="sortField" value="@Model.SortField" />
+                <input type="hidden" name="selectAll" value="@(!Model.AllSelected)" />
+
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input class="form-check-input" type="checkbox" id="selectAll"
+                                       onclick="selectAllCheckboxes(this.checked)"
+                                @(Model.AllSelected ? "checked" : "") />
+                            </th>
+                            <th>
+                                <div>Name</div>
+                            </th>
+                            <th>
+                                <div>Email</div>
+                            </th>
+                            <th>
+                                <div>Role</div>
+                            </th>
+                            <th>
+                                <div>Last seen</div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model.Users)
+                        {
+                            <tr class="@(user.IsBlocked ? "table-secondary" : "")">
+                                <td>
+                                    <div class="form-check">
+                                        <input class="form-check-input user-checkbox" type="checkbox"
+                                               value="@user.Id"
+                                        @(user.IsSelected ? "checked" : "")
+                                               onchange="updateSelectedUsers()" />
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="@(user.IsBlocked ? "text-decoration-line-through text-muted" : "")">@user.Name</div>
+                                    <div class="text-muted small">N/A</div>
+                                </td>
+                                <td class="@(user.IsBlocked ? "text-decoration-line-through text-muted" : "")">
+                                    @user.Email
+                                </td>
+                                <td class="@(user.IsAdmin ? "text-success fw-bold" : "")">
+                                    @(user.IsAdmin ? "Admin" : "User")
+                                </td>
+                                <td>
+                                    <div>@user.LastSeenFormatted</div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div>
+                        <span class="text-muted">Показано @((Model.CurrentPage - 1) * Model.PageSize + 1)-@Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalUsers) из @Model.TotalUsers</span>
+                    </div>
+
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" asp-action="Users"
+                                   asp-route-page="@(Model.CurrentPage - 1)">
+                                    &laquo;
+                                </a>
+                            </li>
+
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="Users"
+                                       asp-route-page="@i">@i</a>
+                                </li>
+                            }
+
+                            <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                                <a class="page-link" asp-action="Users"
+                                   asp-route-page="@(Model.CurrentPage + 1)">
+                                    &raquo;
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (TempData["StatusMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+            @TempData["StatusMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function updateSelectedUsers() {
+            const selectedIds = [];
+            document.querySelectorAll('.user-checkbox:checked').forEach(checkbox => {
+                selectedIds.push(checkbox.value);
+            });
+            document.getElementById('selectedUserIds').value = selectedIds.join(',');
+
+            const pageInput = document.createElement('input');
+            pageInput.type = 'hidden';
+            pageInput.name = 'page';
+            pageInput.value = '@Model.CurrentPage';
+            document.getElementById('actionForm').appendChild(pageInput);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSelectedUsers();
+        });
+
+        function selectAllCheckboxes(checked) {
+            document.querySelectorAll('.user-checkbox').forEach(checkbox => {
+                checkbox.checked = checked;
+            });
+            updateSelectedUsers();
+        }
+    </script>
+}

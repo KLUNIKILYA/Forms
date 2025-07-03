@@ -1,0 +1,48 @@
+﻿@model Forms.Models.RegisterUserViewModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<body>
+    <div class="auth-container">
+        <div class="auth-card" id="register-form">
+            <div class="auth-header">
+                <h2><i class="fas fa-user-plus"></i> Регистрация</h2>
+            </div>
+            <div class="auth-body">
+                <form method="post" >
+                    <div class="mb-3">
+                        <label for="register-first-name" class="form-label">Name</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            <input type="text" class="form-control" id="register-first-name" name="Name" placeholder="Введите ваше имя">
+                        </div>
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label for="register-email" class="form-label">Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            <input class="form-control" id="register-email" name="Email" placeholder="Введите ваш email">
+                        </div>
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label for="register-password" class="form-label">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input type="password" class="form-control" id="register-confirm-password" name="Password" placeholder="Создайте пароль">
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Зарегистрироваться</button>
+                </form>
+            </div>
+            <div class="auth-footer">
+                Уже есть аккаунт? <a href="/Auth/Login" onclick="switchToLogin()">Войдите</a>
+            </div>
+        </div>
+    </div>
+
+</body>
