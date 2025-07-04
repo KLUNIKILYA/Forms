@@ -56,7 +56,6 @@
                                 <a asp-action="ViewResults" asp-route-templateId="@template.Id" class="btn btn-outline-info btn-sm" title="Посмотреть ответы">
                                     <i class="bi bi-bar-chart-line"></i>
                                 </a>
-                                <!-- Форма для удаления с подтверждением -->
                                 <form asp-action="Delete" asp-route-id="@template.Id" method="post" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите удалить этот шаблон и все связанные с ним ответы? Это действие необратимо.');">
                                     <button type="submit" class="btn btn-outline-danger btn-sm" title="Удалить">
                                         <i class="bi bi-trash"></i>
@@ -81,33 +80,3 @@
         </div>
     }
 </div>
-
-<style>
-    .card-hover-template {
-        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    }
-
-        .card-hover-template:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-        }
-
-    .card-img-top-wrapper {
-        position: relative;
-    }
-
-    .card-img-top {
-        height: 180px;
-        background-size: cover;
-        background-position: center;
-        background-color: #f8f9fa;
-    }
-
-    .status-badge {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        z-index: 10;
-        font-size: 0.8rem;
-    }
-</style>

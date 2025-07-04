@@ -1,0 +1,473 @@
+﻿@model Forms.Models.Templates.TemplateEditViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Edit Template";
+}
+
+<body>
+    <div class="container py-4">
+        <h1 class="mb-4">Edit Template: @Model.Title</h1>
+
+        <form id="templateForm">
+            <input type="hidden" id="templateId" value="@Model.Id" />
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-info-circle"></i> Basic Information
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="templateTitle" class="form-label">Template Title*</label>
+                        <input type="text" class="form-control" id="templateTitle" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="templateDescription" class="form-label">Description (Markdown supported)</label>
+                        <textarea class="form-control" id="templateDescription" rows="3"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="templateTopic" class="form-label">Topic*</label>
+                        <select class="form-select" id="templateTopic" required>
+                            <option value="">Select a topic</option>
+                            <option value="Education">Education</option>
+                            <option value="Quiz">Quiz</option>
+                            <option value="Survey">Survey</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="templateTagsInput" class="form-label">Tags</label>
+                        <div class="autocomplete-wrapper">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="templateTagsInput" placeholder="Add tags...">
+                                <button class="btn btn-outline-secondary" type="button" id="addTagBtn">Add</button>
+                            </div>
+                            <div id="tagsAutocomplete" class="autocomplete-items"></div>
+                        </div>
+                        <div class="tag-container" id="tagsContainer"></div>
+                        <input type="hidden" id="templateTags" name="tags">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-shield-lock"></i> Access Settings
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="accessType" id="publicAccess" value="public" checked>
+                            <label class="form-check-label" for="publicAccess">
+                                Public (any authenticated user can fill out)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="accessType" id="restrictedAccess" value="restricted">
+                            <label class="form-check-label" for="restrictedAccess">
+                                Restricted (select users only)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="allowedUsersContainer" class="mb-3" style="display: none;">
+                        <label class="form-label">Allowed Users</label>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" id="userSearch" placeholder="Search users by name or email">
+                            <button class="btn btn-outline-secondary" type="button" id="addUserBtn">Add</button>
+                        </div>
+                        <div id="selectedUsersList" class="list-group"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-question-circle"></i> Questions</span>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-light" id="addQuestionBtn">
+                            <i class="bi bi-plus"></i> Add Question
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="questions-container" class="sortable-questions">
+                        <div class="alert alert-info">
+                            No questions added yet. Click "Add Question" to get started.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="@Url.Action("MyTemplates", "Templates")" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="modal fade" id="questionTypeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Question</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="list-group">
+                        <button type="button" class="list-group-item list-group-item-action question-type" data-type="text">
+                            <i class="bi bi-text-left"></i> Single-line text
+                        </button>
+                        <button type="button" class="list-group-item list-group-item-action question-type" data-type="textarea">
+                            <i class="bi bi-text-paragraph"></i> Multiple-line text
+                        </button>
+                        <button type="button" class="list-group-item list-group-item-action question-type" data-type="number">
+                            <i class="bi bi-123"></i> Non-negative integer
+                        </button>
+                        <button type="button" class="list-group-item list-group-item-action question-type" data-type="checkbox">
+                            <i class="bi bi-check-square"></i> Checkbox
+                        </button>
+                        <button type="button" class="list-group-item list-group-item-action question-type" data-type="dropdown">
+                            <i class="bi bi-menu-button"></i> Dropdown (select one)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const initialData = @Html.Raw(Json.Serialize(Model));
+
+            const form = document.getElementById('templateForm');
+            const questionsContainer = document.getElementById('questions-container');
+            const addQuestionBtn = document.getElementById('addQuestionBtn');
+            const tagsContainer = document.getElementById('tagsContainer');
+            const addTagBtn = document.getElementById('addTagBtn');
+            const accessTypeRadios = document.querySelectorAll('input[name="accessType"]');
+            const allowedUsersContainer = document.getElementById('allowedUsersContainer');
+            const addUserBtn = document.getElementById('addUserBtn');
+            const selectedUsersList = document.getElementById('selectedUsersList');
+
+            initEventListeners();
+            populateForm(initialData); 
+
+            function initEventListeners() {
+                addQuestionBtn.addEventListener('click', showQuestionTypeModal);
+
+                addTagBtn.addEventListener('click', addTagFromInput);
+                document.getElementById('templateTagsInput').addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addTagFromInput();
+                    }
+                });
+
+                accessTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', toggleAccessType);
+                });
+
+                addUserBtn.addEventListener('click', function () {
+                    const email = prompt("Введите email пользователя для поиска (заглушка):");
+                    if (email) {
+                        addUserToSelectedList({ id: Date.now(), email: email });
+                    }
+                });
+
+                form.addEventListener('submit', handleFormSubmit);
+            }
+
+            function populateForm(data) {
+                document.getElementById('templateTitle').value = data.title;
+                document.getElementById('templateDescription').value = data.description;
+                document.getElementById('templateTopic').value = data.topic;
+
+                if (data.tags && data.tags.length > 0) {
+                    data.tags.forEach(tag => addTagToContainer(tag));
+                }
+
+                if (data.isPublic) {
+                    document.getElementById('publicAccess').checked = true;
+                } else {
+                    document.getElementById('restrictedAccess').checked = true;
+                }
+                document.querySelector('input[name="accessType"]:checked').dispatchEvent(new Event('change'));
+
+                if (data.questions && data.questions.length > 0) {
+                    questionsContainer.innerHTML = '';
+                    data.questions.forEach(qData => {
+                        const jsType = getJsQuestionType(qData.type);
+                        addQuestion(jsType, qData);
+                    });
+                } else {
+                    checkEmptyQuestions();
+                }
+            }
+
+            function showQuestionTypeModal() {
+                const modalElement = document.getElementById('questionTypeModal');
+                const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+
+                const newModalBody = modalElement.querySelector('.modal-body').cloneNode(true);
+                modalElement.querySelector('.modal-body').parentNode.replaceChild(newModalBody, modalElement.querySelector('.modal-body'));
+
+                newModalBody.querySelectorAll('.question-type').forEach(button => {
+                    button.addEventListener('click', function () {
+                        addQuestion(this.dataset.type);
+                        modal.hide();
+                    }, { once: true });
+                });
+                modal.show();
+            }
+
+            function addQuestion(type, data = null) {
+                if (questionsContainer.querySelector('.alert')) {
+                    questionsContainer.innerHTML = '';
+                }
+
+                const questionId = 'question-' + Date.now();
+                const questionCard = document.createElement('div');
+                questionCard.className = 'card question-card mb-3';
+                questionCard.dataset.questionType = type;
+                questionCard.dataset.questionId = questionId;
+                questionCard.dataset.dbId = data ? data.id : '0';
+
+                questionCard.innerHTML = `
+                    <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                        <div class="drag-handle"><i class="bi bi-grip-vertical"></i> ${getQuestionTypeName(type)}</div>
+                        <button type="button" class="btn btn-sm btn-outline-danger delete-question"><i class="bi bi-trash"></i></button>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Текст вопроса*</label>
+                            <input type="text" class="form-control question-text" required>
+                        </div>
+                        ${getQuestionTypeHtml(type)}
+                        <div class="form-check mt-2">
+                            <input class="form-check-input required-checkbox" type="checkbox" id="required-${questionId}">
+                            <label class="form-check-label" for="required-${questionId}">Обязательный вопрос</label>
+                        </div>
+                    </div>`;
+
+                if (data) {
+                    questionCard.querySelector('.question-text').value = data.text;
+                    questionCard.querySelector('.required-checkbox').checked = data.isRequired;
+                }
+
+                questionsContainer.appendChild(questionCard);
+                initQuestionCard(questionCard, type, data ? data.options : null);
+
+                questionCard.querySelector('.delete-question').addEventListener('click', function () {
+                    if (confirm('Вы уверены, что хотите удалить этот вопрос?')) {
+                        questionCard.remove();
+                        checkEmptyQuestions();
+                    }
+                });
+            }
+
+            function initQuestionCard(card, type, optionsData = null) {
+                if (['checkbox', 'dropdown'].includes(type)) {
+                    const optionsContainer = card.querySelector('.options-container');
+                    const addOptionBtn = card.querySelector('.add-option');
+                    addOptionBtn.addEventListener('click', () => addOptionToQuestion(optionsContainer));
+
+                    if (optionsData && optionsData.length > 0) {
+                        optionsData.forEach(optValue => addOptionToQuestion(optionsContainer, optValue));
+                    } else {
+                        addOptionToQuestion(optionsContainer);
+                    }
+                }
+            }
+
+            function addOptionToQuestion(container, value = '') {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'input-group mb-2';
+                optionDiv.innerHTML = `
+                    <input type="text" class="form-control option-input" placeholder="Текст варианта" required value="${value}">
+                    <button class="btn btn-outline-danger remove-option" type="button"><i class="bi bi-trash"></i></button>`;
+                container.appendChild(optionDiv);
+
+                optionDiv.querySelector('.remove-option').addEventListener('click', function () {
+                    if (container.children.length > 1) {
+                        optionDiv.remove();
+                    } else {
+                        alert('Должен быть как минимум один вариант ответа.');
+                    }
+                });
+            }
+
+            async function handleFormSubmit(e) {
+                e.preventDefault();
+                const submitButton = e.target.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...`;
+
+                try {
+                    const templateData = collectFormData();
+                    const templateId = document.getElementById('templateId').value;
+                    const response = await fetch(`/Templates/UpdateTemplate/${templateId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(templateData)
+                    });
+                    if (response.ok) {
+                        alert('Шаблон успешно обновлен!');
+                        window.location.href = '/Templates/MyTemplates';
+                    } else {
+                        await handleError(response);
+                    }
+                } catch (error) {
+                    showError('Сетевая ошибка: ' + error.message);
+                } finally {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = `<i class="bi bi-save"></i> Save Changes`;
+                }
+            }
+
+            function collectFormData() {
+                return {
+                    Id: parseInt(document.getElementById('templateId').value, 10),
+                    Title: document.getElementById('templateTitle').value,
+                    Description: document.getElementById('templateDescription').value,
+                    Topic: document.getElementById('templateTopic').value,
+                    IsPublic: document.getElementById('publicAccess').checked,
+                    Tags: getSelectedTags(),
+                    AllowedUserIds: getAllowedUserIds(),
+                    Questions: getQuestionsData()
+                };
+            }
+
+            function getQuestionsData() {
+                return Array.from(document.querySelectorAll('.question-card')).map(card => ({
+                    Id: parseInt(card.dataset.dbId, 10),
+                    Text: card.querySelector('.question-text').value,
+                    Description: "",
+                    Type: getQuestionTypeEnum(card.dataset.questionType),
+                    IsRequired: card.querySelector('.required-checkbox').checked,
+                    ShowInTable: false,
+                    Options: getQuestionOptions(card),
+                }));
+            }
+
+            function getQuestionOptions(card) {
+                if (!['checkbox', 'dropdown'].includes(card.dataset.questionType)) return [];
+                return Array.from(card.querySelectorAll('.option-input'))
+                    .map(input => input.value.trim())
+                    .filter(option => option !== '');
+            }
+
+            function getSelectedTags() {
+                return Array.from(document.querySelectorAll('#tagsContainer .tag'))
+                    .map(tag => tag.textContent.replace(/×\s*$/, '').trim());
+            }
+
+            function getAllowedUserIds() {
+                if (document.getElementById('publicAccess').checked) return [];
+                return Array.from(document.querySelectorAll('#selectedUsersList .user-item'))
+                    .map(item => parseInt(item.dataset.userId));
+            }
+
+            function checkEmptyQuestions() {
+                if (questionsContainer.children.length === 0) {
+                    questionsContainer.innerHTML = '<div class="alert alert-info">Нет добавленных вопросов. Нажмите "Добавить вопрос", чтобы начать.</div>';
+                }
+            }
+
+            function addTagFromInput() {
+                const tagInput = document.getElementById('templateTagsInput');
+                const tagName = tagInput.value.trim();
+                if (tagName && !tagExists(tagName)) {
+                    addTagToContainer(tagName);
+                    tagInput.value = '';
+                }
+            }
+
+            function tagExists(tagName) {
+                return getSelectedTags().some(tag => tag.toLowerCase() === tagName.toLowerCase());
+            }
+
+            function addTagToContainer(tagName) {
+                const tagElement = document.createElement('span');
+                tagElement.className = 'tag badge bg-secondary me-2 mb-2';
+                tagElement.innerHTML = `${tagName}<button type="button" class="btn-close btn-close-white ms-2" aria-label="Удалить"></button>`;
+                tagElement.querySelector('.btn-close').addEventListener('click', () => tagElement.remove());
+                tagsContainer.appendChild(tagElement);
+            }
+
+            function toggleAccessType() {
+                allowedUsersContainer.style.display = document.getElementById('restrictedAccess').checked ? 'block' : 'none';
+            }
+
+            function addUserToSelectedList(user) {
+                const userItem = document.createElement('div');
+                userItem.className = 'list-group-item user-item d-flex justify-content-between align-items-center';
+                userItem.dataset.userId = user.id;
+                userItem.innerHTML = `${user.email}<button type="button" class="btn btn-sm btn-outline-danger remove-user"><i class="bi bi-x"></i></button>`;
+                userItem.querySelector('.remove-user').addEventListener('click', () => userItem.remove());
+                selectedUsersList.appendChild(userItem);
+            }
+
+            async function handleError(response) {
+                let errorMessage = 'Ошибка при сохранении шаблона.';
+                try {
+                    const errorData = await response.text();
+                    try {
+                        const jsonData = JSON.parse(errorData);
+                        if (jsonData.errors) {
+                            let validationErrors = [];
+                            for (const key in jsonData.errors) {
+                                validationErrors.push(`- ${jsonData.errors[key].join(', ')}`);
+                            }
+                            errorMessage += '\n\nОбнаружены следующие ошибки:\n' + validationErrors.join('\n');
+                        }
+                    } catch (e) {
+                         errorMessage += `\n\nСервер ответил: ${errorData}`;
+                    }
+                } catch (e) {
+                    errorMessage += `\n\nНе удалось получить детали ошибки. Статус: ${response.status} (${response.statusText})`;
+                }
+                showError(errorMessage);
+            }
+
+            function showError(message) {
+                alert(message);
+                console.error(message);
+            }
+
+
+            function getJsQuestionType(enumValue) {
+                const typesMap = { 0: 'text', 1: 'textarea', 2: 'checkbox', 3: 'dropdown', 4: 'number' };
+                return typesMap[enumValue] || 'text';
+            }
+
+            function getQuestionTypeEnum(jsType) {
+                const typesMap = { 'text': 'SingleLine', 'textarea': 'MultiLine', 'number': 'Integer', 'checkbox': 'Checkbox', 'dropdown': 'Dropdown' };
+                return typesMap[jsType];
+            }
+
+            function getQuestionTypeName(type) {
+                const names = { 'text': 'Текст (одна строка)', 'textarea': 'Текст (много строк)', 'number': 'Число', 'checkbox': 'Чекбокс', 'dropdown': 'Выпадающий список' };
+                return names[type] || 'Вопрос';
+            }
+
+            function getQuestionTypeHtml(type) {
+                const templates = {
+                    'text': '<div class="mb-3"><label class="form-label">Поле ответа</label><input type="text" class="form-control" disabled placeholder="Текст ответа"></div>',
+                    'textarea': '<div class="mb-3"><label class="form-label">Поле ответа</label><textarea class="form-control" disabled placeholder="Текст ответа" rows="3"></textarea></div>',
+                    'number': '<div class="mb-3"><label class="form-label">Поле ответа</label><input type="number" class="form-control" disabled placeholder="Число" min="0"></div>',
+                    'checkbox': '<div class="mb-3"><label class="form-label">Варианты ответа*</label><div class="options-container"></div><button type="button" class="btn btn-sm btn-outline-primary add-option"><i class="bi bi-plus"></i> Добавить вариант</button></div>',
+                    'dropdown': '<div class="mb-3"><label class="form-label">Варианты ответа*</label><div class="options-container"></div><button type="button" class="btn btn-sm btn-outline-primary add-option"><i class="bi bi-plus"></i> Добавить вариант</button></div>'
+                };
+                return templates[type] || '';
+            }
+        });
+    </script>
+</body>

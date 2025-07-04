@@ -13,48 +13,42 @@ namespace Forms.Controllers
 {
     public class TemplatesController : Controller
     {
-        private AuthServices _authServices;
-        private WebDbContext _webDbContext;
-        private readonly IUserRepository _userRepository;
+        private readonly AuthServices _authServices;
+        private readonly ITemplateRepository _templateRepository;
+        private readonly TemplateService _templateService;
 
-        public TemplatesController(WebDbContext webDbContext, IUserRepository userRepository, AuthServices authServices)
+        public TemplatesController(AuthServices authServices, ITemplateRepository templateRepository, TemplateService templateService)
         {
-            _webDbContext = webDbContext;
-            _userRepository = userRepository;
             _authServices = authServices;
+            _templateRepository = templateRepository;
+            _templateService = templateService;
         }
 
         public async Task<IActionResult> Index()
         {
             var viewModel = new HomeViewModel();
-
             viewModel.IsAuthenticated = _authServices.IsAuthenticated();
+
+            var popularTemplatesData = await _templateRepository.GetPopularTemplatesAsync(5);
+            viewModel.PopularTemplates = popularTemplatesData.Select(t => new TemplateIndexViewModel
+            {
+                Id = t.Id,
+                Title = t.Title
+            }).ToList();
+
             if (viewModel.IsAuthenticated)
             {
                 viewModel.UserId = _authServices.GetId();
                 viewModel.UserName = _authServices.GetName();
                 viewModel.IsAdmin = _authServices.IsAdmin();
-            }
 
-            var popularTemplatesQuery = _webDbContext.Forms
-                .GroupBy(form => form.TemplateId)
-                .Select(group => new
+                var recentTemplatesData = await _templateRepository.GetRecentUserTemplatesAsync(viewModel.UserId.Value, 5);
+                viewModel.RecentUserTemplates = recentTemplatesData.Select(t => new TemplateIndexViewModel
                 {
-                    TemplateId = group.Key,
-                    Count = group.Count()
-                })
-                .OrderByDescending(x => x.Count).Take(5).Join(
-                    _webDbContext.Templates,
-                    popular => popular.TemplateId,
-                    template => template.Id,
-                    (popular, template) => new TemplateIndexViewModel
-                    {
-                        Id = template.Id,
-                        Title = template.Title
-                    }
-                );
-
-            viewModel.PopularTemplates = await popularTemplatesQuery.ToListAsync();
+                    Id = t.Id,
+                    Title = t.Title
+                }).ToList();
+            }
 
             return View(viewModel);
         }
@@ -62,110 +56,47 @@ namespace Forms.Controllers
         [HttpGet]
         public IActionResult CreateTemplate()
         {
-            return View();
+            if (!_authServices.IsAuthenticated())
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+            return View("CreateTemplate");
         }
 
         [HttpPost]
-        public IActionResult CreateTemplate([FromBody] TemplateViewModel templateModel)
+        public async Task<IActionResult> CreateTemplate([FromBody] TemplateViewModel templateModel)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
-
             }
 
             var currentUserId = _authServices.GetId();
-
-            var currentUser =  _webDbContext.Users.Find(currentUserId.Value);
-
-            if (currentUser == null || currentUser.IsBlocked)
+            if (currentUserId == null)
             {
-                return Unauthorized("User not found or is blocked.");
+                return Unauthorized("User is not authenticated.");
             }
 
-            var template = new TemplateData
-            {
-                Title = templateModel.Title,
-                Description = templateModel.Description,
-                Topic = templateModel.Topic,
-                IsPublic = templateModel.IsPublic,
-                AuthorId = currentUserId.Value,
-            };
+            var (template, errorMessage) = await _templateService.CreateTemplateAsync(templateModel, currentUserId.Value);
 
-            if (templateModel.Tags != null && templateModel.Tags.Any())
+            if (template == null)
             {
-                foreach (var tagName in templateModel.Tags)
-                {
-                    var existingTag = _webDbContext.Tags.FirstOrDefault(t => t.Name == tagName);
-                    if (existingTag != null)
-                    {
-                        template.Tags.Add(existingTag);
-                    }
-                    else
-                    {
-                        var newTag = new TagData { Name = tagName };
-                        _webDbContext.Tags.Add(newTag);
-
-                        template.Tags.Add(newTag);
-                    }
-                }
+                return StatusCode(500, new { message = errorMessage ?? "An unexpected error occurred." });
             }
-
-            if (!template.IsPublic && templateModel.AllowedUserIds != null)
-            {
-
-            }
-
-            if (templateModel.Questions != null)
-            {
-                foreach (var questionDto in templateModel.Questions)
-                {
-                    var question = new QuestionData
-                    {
-                        Title = questionDto.Text,
-                        Description = questionDto.Description,
-                        Type = questionDto.Type,
-                        IsRequired = questionDto.IsRequired,
-                        ShowInTable = questionDto.ShowInTable,
-                        Template = template
-                    };
-
-                    if ((questionDto.Type == QuestionType.Checkbox || questionDto.Type == QuestionType.Dropdown)
-                        && questionDto.Options != null)
-                    {
-                        foreach (var optionText in questionDto.Options)
-                        {
-                            question.Options.Add(new QuestionOptionData
-                            {
-                                Value = optionText,
-                                Question = question
-                            });
-                        }
-                    }
-                    template.Questions.Add(question);
-                }
-            }
-
-            _webDbContext.Templates.Add(template);
-
-            _webDbContext.SaveChangesAsync();
 
             var resultDto = new
             {
                 Id = template.Id,
                 Title = template.Title,
-
             };
 
-            return CreatedAtAction(nameof(GetTemplate), new { id = template.Id }, resultDto);
+            return CreatedAtAction(nameof(GetTemplateData), new { id = template.Id }, resultDto);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetTemplate(int id)
+        [HttpGet("Templates/Data/{id}")]
+        public async Task<IActionResult> GetTemplateData(int id)
         {
-            var template = await _webDbContext.Templates
-                .Include(t => t.Questions)
-                .FirstOrDefaultAsync(t => t.Id == id);
+            var template = await _templateRepository.GetTemplateForEditingAsync(id);
 
             if (template == null)
             {
@@ -175,18 +106,17 @@ namespace Forms.Controllers
             return Ok(template);
         }
 
+
+
         [HttpGet]
         public async Task<IActionResult> MyTemplates()
         {
-            var userId = _authServices.GetId()!.Value;
+            var userId = _authServices.GetId();
+            if (userId == null) return RedirectToAction("Login", "Auth");
 
-            var userTemplates = await _webDbContext.Templates
-                .Where(t => t.AuthorId == userId)
-                .Include(t => t.Forms)
-                .OrderBy(t => t.Title)
-                .ToListAsync();
+            var userTemplatesData = await _templateRepository.GetUserTemplatesWithFillCountAsync(userId.Value);
 
-            var viewModel = userTemplates.Select(template => new UserTemplateViewModel
+            var viewModel = userTemplatesData.Select(template => new UserTemplateViewModel
             {
                 Id = template.Id,
                 Title = template.Title,
@@ -197,6 +127,100 @@ namespace Forms.Controllers
             }).ToList();
 
             return View(viewModel);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            if (!_authServices.IsAuthenticated())
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var currentUserId = _authServices.GetId().Value;
+
+            var template = await _templateRepository.GetTemplateForEditingAsync(id);
+
+            if (template == null)
+            {
+                return NotFound();
+            }
+
+            if (template.AuthorId != currentUserId && !_authServices.IsAdmin())
+            {
+                return Forbid("You do not have permission to edit this template.");
+            }
+
+            var viewModel = new TemplateEditViewModel
+            {
+                Id = template.Id,
+                Title = template.Title,
+                Description = template.Description,
+                Topic = template.Topic,
+                IsPublic = template.IsPublic,
+                Tags = template.Tags.Select(t => t.Name).ToList(),
+                AllowedUserIds = template.AllowedUsers.Select(au => au.UserId).ToList(),
+                Questions = template.Questions.OrderBy(q => q.Id).Select(q => new QuestionViewModel
+                {
+                    Id = q.Id,
+                    Text = q.Title,
+                    Description = q.Description,
+                    Type = q.Type,
+                    IsRequired = q.IsRequired,
+                    ShowInTable = q.ShowInTable,
+                    Options = q.Options.Select(o => o.Value).ToList()
+                }).ToList()
+            };
+
+            return View("Edit", viewModel);
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdateTemplate(int id, [FromBody] TemplateViewModel templateModel)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var currentUserId = _authServices.GetId();
+            if (currentUserId == null) return Unauthorized();
+
+            var (success, errorMessage) = await _templateService.UpdateTemplateAsync(id, templateModel, currentUserId.Value, _authServices.IsAdmin());
+
+            if (!success)
+            {
+                return BadRequest(new { message = errorMessage });
+            }
+
+            return Ok(new { message = "Template updated successfully.", id = id });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var currentUserId = _authServices.GetId();
+            if (currentUserId == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var template = await _templateRepository.GetTemplateForEditingAsync(id);
+
+            if (template == null)
+            {
+                return NotFound();
+            }
+
+            if (template.AuthorId != currentUserId.Value && !_authServices.IsAdmin())
+            {
+                return Forbid("You do not have permission to delete this template.");
+            }
+
+            _templateRepository.Remove(template);
+            await _templateRepository.SaveChangesAsync();
+
+            return RedirectToAction(nameof(MyTemplates));
         }
     }
 }

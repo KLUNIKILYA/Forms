@@ -10,6 +10,7 @@ namespace Forms.Models
         public bool IsAdmin { get; set; }
 
         public List<TemplateIndexViewModel> PopularTemplates { get; set; }
+        public List<TemplateIndexViewModel> RecentUserTemplates { get; set; } = new();
 
         public HomeViewModel()
         {

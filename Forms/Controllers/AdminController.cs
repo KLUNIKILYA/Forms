@@ -1,7 +1,12 @@
-﻿using DataBase.Repositories;
+﻿using DataBase;
+using DataBase.Models;
+using DataBase.Repositories;
 using Enums.User;
 using Forms.Models;
+using Forms.Models.Forms;
+using Forms.Models.User;
 using Forms.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,11 +18,15 @@ namespace Forms.Controllers
     {
         IUserRepository _userRepository;
         AdminService _adminService;
+        WebDbContext _webDbContext;
+        AuthServices _authServices;
 
-        public AdminController(IUserRepository userRepository, AdminService adminService)
+        public AdminController(IUserRepository userRepository, AdminService adminService, WebDbContext webDbContext, AuthServices authServices)
         {
             _userRepository = userRepository;
             _adminService = adminService;
+            _webDbContext = webDbContext;
+            _authServices = authServices;
         }
 
         public async Task<IActionResult> Users(int page = 1, int pageSize = 10)
@@ -127,10 +136,20 @@ namespace Forms.Controllers
             });
         }
 
+
         [HttpPost]
-        public IActionResult RemoveAdmin(string selectedUserIds, int page)
+        public async Task<IActionResult> RemoveAdmin(string selectedUserIds, int page)
         {
+            var currentAdminId = _authServices.GetId();
+
+            if (currentAdminId == null)
+            {
+                return Unauthorized("Could not identify the current user.");
+            }
+
             var userIds = ParseUserIds(selectedUserIds);
+            bool isDemotingSelf = userIds.Contains(currentAdminId.Value);
+
             foreach (var userId in userIds)
             {
                 var user = _userRepository.GetById(userId);
@@ -140,11 +159,73 @@ namespace Forms.Controllers
                 }
             }
 
-            return RedirectToAction("Users", new
+            if (isDemotingSelf)
             {
-                page = page,
-                pageSize = 10
-            });
+                await HttpContext.SignOutAsync(AuthServices.AUTH_TYPE_KEY);
+
+                TempData["StatusMessage"] = "Ваши права администратора были сняты. Пожалуйста, войдите в систему снова.";
+                return RedirectToAction("Login", "Auth");
+            }
+            else
+            {
+                TempData["StatusMessage"] = "Права администратора были сняты для выбранных пользователей.";
+                return RedirectToAction("Users", new
+                {
+                    page = page,
+                    pageSize = 10
+                });
+            }
+        }
+
+
+        [HttpGet("Admin/UserProfile/{id}")]
+        public async Task<IActionResult> UserProfile(int id)
+        {
+            if (!_authServices.IsAdmin())
+            {
+                return Forbid("You do not have permission to view this page.");
+            }
+
+            var user = await _webDbContext.Users
+                .AsNoTracking()
+                .Include(u => u.Templates)
+                    .ThenInclude(t => t.Forms)
+                .Include(u => u.Forms)
+                    .ThenInclude(f => f.Template)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+
+            var viewModel = new UserProfileViewModel
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                IsBlocked = user.IsBlocked,
+                IsAdmin = user.Role == Role.Admin,
+                Templates = user.Templates.Select(t => new UserTemplateSummaryViewModel
+                {
+                    Id = t.Id,
+                    Title = t.Title,
+                    IsPublic = t.IsPublic,
+                    TimesFilled = t.Forms.Count,
+                    ImageUrl = t.ImageUrl
+                }).ToList(),
+                FilledForms = user.Forms.Select(f => new MyFormViewModel
+                {
+                    FormId = f.Id,
+                    TemplateTitle = f.Template.Title,
+                    TemplateDescription = f.Template.Description,
+                    LastUpdated = f.UpdatedAt ?? f.CreatedAt,
+                    TemplateImageUrl = f.Template.ImageUrl
+                }).OrderByDescending(f => f.LastUpdated).ToList()
+            };
+
+            return View(viewModel);
         }
 
 

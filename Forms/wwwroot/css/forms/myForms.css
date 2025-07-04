@@ -1,0 +1,20 @@
+﻿.card-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.card-hover {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+    .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+
+.card-img-top {
+    height: 180px;
+    background-size: cover;
+    background-position: center;
+    background-color: #e9ecef;
+}

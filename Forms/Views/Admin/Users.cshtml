@@ -75,8 +75,9 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="@(user.IsBlocked ? "text-decoration-line-through text-muted" : "")">@user.Name</div>
-                                    <div class="text-muted small">N/A</div>
+                                    <a asp-action="UserProfile" asp-route-id="@user.Id" class="fw-bold text-decoration-none @(user.IsBlocked ? "text-muted" : "")">
+                                        @user.Name
+                                    </a>
                                 </td>
                                 <td class="@(user.IsBlocked ? "text-decoration-line-through text-muted" : "")">
                                     @user.Email

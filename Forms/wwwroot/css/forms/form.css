@@ -1,0 +1,42 @@
+﻿.question-item {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+}
+
+    .question-item:hover {
+        background-color: #f8f9fa;
+    }
+
+.options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-check {
+    padding-left: 1.5em;
+}
+
+.form-check-input {
+    margin-left: -1.5em;
+}
+
+.card-text p:last-child {
+    margin-bottom: 0;
+}
+
+.card-text ul, .card-text ol {
+    padding-left: 1.5rem;
+}
+
+.card-text code {
+    background-color: #f3f3f3;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-family: monospace;
+}
+
+.btn {
+    transition: all 0.2s;
+}

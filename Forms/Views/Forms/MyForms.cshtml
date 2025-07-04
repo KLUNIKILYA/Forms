@@ -27,7 +27,6 @@
                             <div class="card-body d-flex flex-column">
                                 <h5 class="card-title">@form.TemplateTitle</h5>
                                 <p class="card-text text-muted flex-grow-1">
-                                    @* Обрезаем длинное описание для красоты *@
                                     @(form.TemplateDescription.Length > 100 ? form.TemplateDescription.Substring(0, 100) + "..." : form.TemplateDescription)
                                 </p>
                                 <p class="card-text mt-auto">
@@ -57,26 +56,3 @@
         </div>
     }
 </div>
-
-<style>
-    .card-link {
-        text-decoration: none;
-        color: inherit;
-    }
-
-    .card-hover {
-        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    }
-
-        .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-        }
-
-    .card-img-top {
-        height: 180px;
-        background-size: cover;
-        background-position: center;
-        background-color: #e9ecef;
-    }
-</style>

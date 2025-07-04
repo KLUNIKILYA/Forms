@@ -134,18 +134,14 @@
                             id: question.id,
                             text: question.title,
                             description: question.description,
-                            // ИЗМЕНЕНО: Упрощено, тип уже является нужной строкой
                             type: question.type,
                             isRequired: question.isRequired,
-                            // ИЗМЕНЕНО: `question.options` уже является массивом строк, дополнительное .map не нужно
                             options: question.options
                         }))
                     };
 
-                    // Проверяем, есть ли сохраненный черновик
                     responseData = {
                         formId: formData.id,
-                    // Используем ответы с сервера. Если их нет (новая форма), будет пустой объект.
                         answers: formDataFromServer.answers || {}
                     };
 
@@ -337,7 +333,6 @@
                 if (missingRequiredFields.length > 0) {
                     requiredFieldsWarning.textContent = 'Пожалуйста, заполните все обязательные поля, отмеченные звездочкой.';
                     requiredFieldsWarning.style.display = 'block';
-                    // В модальном окне не даем нажать "Отправить"
                     confirmSubmitBtn.disabled = true;
                     scrollToFirstMissingField(missingRequiredFields[0]);
                 } else {
@@ -422,14 +417,12 @@
             async function submitForm() {
                 submitConfirmationModal.hide();
 
-            // Показываем спиннер на кнопке отправки для обратной связи
                 confirmSubmitBtn.disabled = true;
                 confirmSubmitBtn.innerHTML = `
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                     Отправка...
                 `;
 
-            // Убедимся, что все ответы собраны перед отправкой
                 collectAnswers();
 
                 try {
@@ -437,9 +430,8 @@
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                        // Если у вас есть анти-CSRF токен, его нужно добавить сюда
                         },
-                        body: JSON.stringify(responseData) // responseData имеет структуру { formId: ..., answers: {...} }
+                        body: JSON.stringify(responseData)
                     });
 
                     if (!response.ok) {
@@ -450,73 +442,22 @@
                     const result = await response.json();
                     console.log('Ответ сервера:', result);
 
-                // Успешная отправка: удаляем черновик
                     localStorage.removeItem(`formDraft_${formData.id}`);
 
 
-                // Показываем сообщение об успехе
                     alert('Форма успешно отправлена!');
 
 
-                // Перенаправляем пользователя, например, на страницу "Мои формы"
-                    window.location.href = '/Templates/Index'; // Замените на ваш реальный URL
+                    window.location.href = '/Templates/Index';
 
                 } catch (error) {
                     console.error('Ошибка при отправке формы:', error);
                     alert('Не удалось отправить форму. Пожалуйста, попробуйте еще раз.');
                 } finally {
-                // Возвращаем кнопку в исходное состояние
                     confirmSubmitBtn.disabled = false;
                     confirmSubmitBtn.innerHTML = 'Отправить';
                 }
             }
         });
     </script>
-
-    <style>
-        .question-item {
-            padding: 1rem;
-            border-radius: 0.5rem;
-            transition: all 0.2s;
-        }
-
-            .question-item:hover {
-                background-color: #f8f9fa;
-            }
-
-        .options-container {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .form-check {
-            padding-left: 1.5em;
-        }
-
-        .form-check-input {
-            margin-left: -1.5em;
-        }
-
-        /* Стили для Markdown контента */
-        .card-text p:last-child {
-            margin-bottom: 0;
-        }
-
-        .card-text ul, .card-text ol {
-            padding-left: 1.5rem;
-        }
-
-        .card-text code {
-            background-color: #f3f3f3;
-            padding: 0.2rem 0.4rem;
-            border-radius: 0.25rem;
-            font-family: monospace;
-        }
-
-        /* Анимация для кнопок */
-        .btn {
-            transition: all 0.2s;
-        }
-    </style>
 </body>

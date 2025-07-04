@@ -1,0 +1,27 @@
+﻿.card-hover-template {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+    .card-hover-template:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+
+.card-img-top-wrapper {
+    position: relative;
+}
+
+.card-img-top {
+    height: 180px;
+    background-size: cover;
+    background-position: center;
+    background-color: #f8f9fa;
+}
+
+.status-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+    font-size: 0.8rem;
+}

@@ -15,6 +15,7 @@ namespace DataBase.Models
         public string? ImageUrl { get; set; }
         public bool IsPublic { get; set; }
         public int AuthorId { get; set; }
+        public DateTime CreateAt { get; set; }
         public UserData Author { get; set; }
 
         public virtual List<TagData> Tags { get; set; } = new();

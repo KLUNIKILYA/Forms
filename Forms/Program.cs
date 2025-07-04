@@ -22,9 +22,13 @@ builder.Services.AddControllersWithViews()
 builder.Services.AddDbContext<WebDbContext>(x => x.UseSqlServer(WebDbContext.CONNECTION_STRING));
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
+builder.Services.AddScoped<IFormRepository, FormRepository>();
 
 builder.Services.AddScoped<AuthServices>();
 builder.Services.AddScoped<AdminService>();
+builder.Services.AddScoped<FormService>();
+builder.Services.AddScoped<TemplateService>();
 
 builder.Services.AddHttpContextAccessor();
 

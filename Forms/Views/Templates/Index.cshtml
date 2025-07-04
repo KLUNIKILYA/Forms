@@ -73,46 +73,33 @@
                         <div class="template-title">@template.Title</div>
                     </a>
                 }
-
-                <a asp-controller="Forms" asp-action="OpenOrStartForm" asp-route-templateId="3" class="template-card template-button text-decoration-none">
-                    <div class="template-image" style="background-image: url('/images/formsimg.png');"></div>
-                    <div class="template-title">Регистрация на мероприятие</div>
-                </a>
             </div>
         </section>
 
         <section class="recent-section">
-            <div class="recent-header">
-                <h2 class="section-title mb-0">Недавние формы</h2>
-                <div class="d-flex align-items-center gap-3">
-                    <select class="form-select form-select-sm" style="width: auto;">
-                        <option>Владелец: кто угодно</option>
-                    </select>
-                    <div class="view-options">
-                        <button class="view-btn active">
-                            <i class="fas fa-th-large"></i>
-                        </button>
-                        <button class="view-btn">
-                            <i class="fas fa-sort-alpha-down"></i>
-                        </button>
-                        <button class="view-btn">
-                            <i class="fas fa-folder"></i>
-                        </button>
+            @if (Model.IsAuthenticated && Model.RecentUserTemplates.Any())
+            {
+                <section class="recent-section">
+                    <div class="recent-header">
+                        <h2 class="section-title mb-0">Недавние шаблоны</h2>
                     </div>
-                </div>
-            </div>
-
-            <div class="recent-grid">
-                <div class="recent-card">
-                    <div class="recent-image" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 280 140%22><rect width=%22280%22 height=%22140%22 fill=%22%23f8f9fa%22/><rect x=%2220%22 y=%2220%22 width=%22240%22 height=%2220%22 fill=%22%23e0e0e0%22/><rect x=%2220%22 y=%2250%22 width=%22180%22 height=%2212%22 fill=%22%23e0e0e0%22/><rect x=%2220%22 y=%2270%22 width=%22200%22 height=%2212%22 fill=%22%23e0e0e0%22/><rect x=%2220%22 y=%2290%22 width=%22160%22 height=%2212%22 fill=%22%23e0e0e0%22/></svg>');"></div>
-                    <div class="recent-content">
-                        <div class="recent-title">Отзыв на приглашение</div>
-                        <div class="recent-meta">
-                            <div class="forms-icon-small"></div>
-                        </div>
+                    <div class="recent-grid">
+                        @foreach (var template in Model.RecentUserTemplates)
+                        {
+                            <a asp-controller="Templates" asp-action="Edit" asp-route-id="@template.Id" class="recent-card text-decoration-none d-block">
+                                <div class="recent-image" style="background-color: #f0f0f0;" );"></div>
+                                <div class="recent-content">
+                                    <div class="recent-title">@template.Title</div>
+                                    <div class="recent-meta">
+                                        <div class="forms-icon-small"></div>
+                                        <span>Нажмите, чтобы редактировать</span>
+                                    </div>
+                                </div>
+                            </a>
+                        }
                     </div>
-                </div>
-            </div>
+                </section>
+            }
         </section>
     </div>
 

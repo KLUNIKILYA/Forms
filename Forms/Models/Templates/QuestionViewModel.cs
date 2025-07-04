@@ -5,6 +5,7 @@ namespace Forms.Models.Templates
 {
     public class QuestionViewModel
     {
+        public int Id { get; set; }
         [Required]
         public string Text { get; set; }
         public string Description { get; set; }

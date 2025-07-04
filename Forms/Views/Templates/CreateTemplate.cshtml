@@ -142,7 +142,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Элементы формы
             const form = document.getElementById('templateForm');
             const addQuestionBtn = document.getElementById('addQuestionBtn');
             const questionsContainer = document.getElementById('questions-container');
@@ -153,14 +152,11 @@
             const addUserBtn = document.getElementById('addUserBtn');
             const selectedUsersList = document.getElementById('selectedUsersList');
 
-            // Инициализация
             initEventListeners();
 
             function initEventListeners() {
-                // Добавление вопроса
                 addQuestionBtn.addEventListener('click', showQuestionTypeModal);
 
-                // Управление тегами
                 addTagBtn.addEventListener('click', addTagFromInput);
                 document.getElementById('templateTagsInput').addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') {
@@ -169,16 +165,13 @@
                     }
                 });
 
-                // Управление доступом
                 accessTypeRadios.forEach(radio => {
                     radio.addEventListener('change', toggleAccessType);
                 });
 
-                // Добавление пользователей (заглушка - нужно реализовать поиск)
                 addUserBtn.addEventListener('click', function() {
                     const email = prompt("Введите email пользователя для поиска (заглушка):");
                     if (email) {
-                        // В реальном приложении здесь будет AJAX-запрос для поиска ID пользователя по email
                         addUserToSelectedList({
                             id: Date.now(),
                             email: email
